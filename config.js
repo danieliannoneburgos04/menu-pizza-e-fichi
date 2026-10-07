@@ -6,5 +6,5 @@
   Se lasci vuoto, il sito mostra il menù salvato in data.js.
 */
 window.MENU_CONFIG = {
-  googleSheet: ""
+  googleSheet: "https://docs.google.com/spreadsheets/d/1_3bFi7sVBWJP-ix2PG0PFGJl6UJYKmIR0goIZKEPwcs/edit?usp=sharing"
 };
