@@ -105,13 +105,36 @@
     return "€\u00a0" + s;
   }
 
-  // Accetta percorsi locali, indirizzi web e link di condivisione Google Drive
-  function img(u, fallback) {
+  // Accetta percorsi locali, indirizzi web e link di condivisione Google Drive.
+  // Restituisce una lista di indirizzi da provare in ordine: se uno non carica si passa al successivo.
+  function imgList(u, fallback) {
     u = String(u || "").trim();
-    if (!u) return fallback || "";
-    var m = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([a-zA-Z0-9_-]{10,})/);
-    if (m) return "https://lh3.googleusercontent.com/d/" + m[1] + "=w1400";
-    return u;
+    var list = [];
+    var m = u.match(/(?:drive|docs)\.google\.com\/(?:.*?\/d\/|.*?[?&]id=)([a-zA-Z0-9_-]{10,})/);
+    if (m) {
+      list.push("https://lh3.googleusercontent.com/d/" + m[1] + "=w1400");
+      list.push("https://drive.google.com/thumbnail?id=" + m[1] + "&sz=w1400");
+    } else if (u) list.push(u);
+    if (fallback && list.indexOf(fallback) < 0) list.push(fallback);
+    return list;
+  }
+  function img(u, fallback) { return imgList(u, fallback)[0] || ""; }
+  function imgTag(u, fallback, attrs) {
+    var l = imgList(u, fallback);
+    if (!l.length) return "";
+    return '<img src="' + esc(l[0]) + '" data-fb="' + esc(l.slice(1).join("|")) + '" onerror="__pfFb(this)" ' + (attrs || 'alt=""') + ">";
+  }
+  window.__pfFb = function (el) {
+    var l = (el.getAttribute("data-fb") || "").split("|").filter(Boolean);
+    if (!l.length) { el.onerror = null; el.style.visibility = "hidden"; return; }
+    el.setAttribute("data-fb", l.slice(1).join("|"));
+    el.src = l[0];
+  };
+
+  // Logo: se nel foglio c'è un link alla voce "logo" usa quello, altrimenti il logo incluso nel sito
+  function logo(cls) {
+    if (set("logo")) return imgTag(set("logo"), "", 'class="logo-img ' + (cls || "") + '" alt="' + esc(set("nome_locale", "Pizza & Fichi")) + '"');
+    return LOGO;
   }
 
   function allergens(list) {
@@ -134,18 +157,18 @@
 
   function tile(href, title, sub, photo) {
     return '<a class="tile" href="' + href + '">' +
-      '<img src="' + esc(photo) + '" alt="" loading="eager" decoding="async">' +
+      imgTag(photo[0], photo[1], 'alt="" decoding="async"') +
       '<span class="label"><span class="t">' + esc(title) + (sub ? '<span class="s">' + esc(sub) + "</span>" : "") +
       '</span><span class="go">' + ICON.chev + "</span></span></a>";
   }
 
   function topbar(backHref) {
     return '<div class="topbar"><div class="in"><a class="back" href="' + backHref + '">' + ICON.back + 'Indietro</a>' +
-      '<a class="mini" href="#/" aria-label="Pagina iniziale">' + LOGO + "</a><span></span></div></div>";
+      '<a class="mini" href="#/" aria-label="Pagina iniziale">' + logo() + "</a><span></span></div></div>";
   }
 
   function hero(title, sub, photo) {
-    return '<div class="hero"><img src="' + esc(photo) + '" alt=""><div class="cap"><h1>' + esc(title) + "</h1>" +
+    return '<div class="hero">' + imgTag(photo[0], photo[1]) + '<div class="cap"><h1>' + esc(title) + "</h1>" +
       (sub ? "<p>" + esc(sub) + "</p>" : "") + "</div></div>";
   }
 
@@ -164,13 +187,13 @@
   function itemHTML(r, nameKey, descKey, opts) {
     opts = opts || {};
     var p = opts.noPrice ? "" : price(r.prezzo);
-    var photo = r.foto ? img(r.foto) : "";
+    var photo = r.foto ? imgTag(r.foto, "", 'class="thumb" alt="" loading="lazy"') : "";
     if (opts.compact) {
       return '<li class="item compact"><div class="body"><div class="row"><span class="name">' + esc(r[nameKey]) +
         (r[descKey] ? ' <small>' + esc(r[descKey]) + "</small>" : "") + "</span>" +
         (p ? '<span class="dots"></span><span class="price">' + p + "</span>" : "") + "</div>" + allergens(r.allergeni) + "</div></li>";
     }
-    return '<li class="item">' + (photo ? '<img class="thumb" src="' + esc(photo) + '" alt="" loading="lazy">' : "") +
+    return '<li class="item">' + photo +
       '<div class="body"><div class="row"><span class="name">' + esc(r[nameKey]) + "</span>" +
       (p ? '<span class="dots"></span><span class="price">' + p + "</span>" : "") + "</div>" +
       (r[descKey] ? '<p class="desc">' + esc(r[descKey]) + "</p>" : "") + allergens(r.allergeni) + "</div></li>";
@@ -209,10 +232,10 @@
 
   var pages = {
     home: function () {
-      return '<div class="home"><header class="brand">' + LOGO + '<p class="slogan">' + esc(set("slogan")) + "</p></header>" +
+      return '<div class="home"><header class="brand">' + logo() + '<p class="slogan">' + esc(set("slogan")) + "</p></header>" +
         '<div class="wrap"><div class="choices">' +
-        tile("#/ristorante", "Menù Ristorante", "Pranzo e cena", img(set("foto_home_ristorante"), "img/ristorante.jpg")) +
-        tile("#/dolci", "Menù Dolci", "Per chiudere in dolcezza", img(set("foto_home_dolci"), "img/dolci.jpg")) +
+        tile("#/ristorante", "Menù Ristorante", "Pranzo e cena", [set("foto_home_ristorante"), "img/ristorante.jpg"]) +
+        tile("#/dolci", "Menù Dolci", "Per chiudere in dolcezza", [set("foto_home_dolci"), "img/dolci.jpg"]) +
         '</div><div class="links">' +
         (set("link_recensioni") ? '<a class="pill solid" href="' + esc(set("link_recensioni")) + '" target="_blank" rel="noopener">' + ICON.star + "Lascia una recensione</a>" : "") +
         '<a class="pill" href="#/allergeni">' + ICON.info + "Allergeni</a></div></div>" + footer() + "</div>";
@@ -220,8 +243,8 @@
 
     ristorante: function () {
       return topbar("#/") + '<div class="wrap"><div class="choices two">' +
-        tile("#/pranzo", "Menù Pranzo", set("pranzo_periodo"), img(set("foto_pranzo"), "img/pranzo.jpg")) +
-        tile("#/cena", "Menù Cena", set("cena_sottotitolo", "Pizze e bevande"), img(set("foto_cena"), "img/cena.jpg")) +
+        tile("#/pranzo", "Menù Pranzo", set("pranzo_periodo"), [set("foto_pranzo"), "img/pranzo.jpg"]) +
+        tile("#/cena", "Menù Cena", set("cena_sottotitolo", "Pizze e bevande"), [set("foto_cena"), "img/cena.jpg"]) +
         "</div></div>" + footer();
     },
 
@@ -242,18 +265,18 @@
         (set("speciale_note") ? '<p class="note">' + esc(set("speciale_note")) + "</p>" : "") + "</div>" : "";
       var t = secs.filter(function (s) { return rows.some(function (r) { return norm(r.sezione) === s[0]; }); }).map(function (s) { return [s[0], s[1]]; });
       t.push(["bevande", "Bevande"], ["pizze", "Pizze"]);
-      return topbar("#/ristorante") + hero("Menù pranzo", set("pranzo_periodo"), img(set("foto_pranzo"), "img/pranzo.jpg")) +
+      return topbar("#/ristorante") + hero("Menù pranzo", set("pranzo_periodo"), [set("foto_pranzo"), "img/pranzo.jpg"]) +
         tabs(t) + '<div class="wrap menu">' + body + offer + bevandeSection() + pizzeSection() + "</div>" + footer();
     },
 
     cena: function () {
-      return topbar("#/ristorante") + hero("Menù cena", set("cena_sottotitolo", "Pizze e bevande"), img(set("foto_cena"), "img/cena.jpg")) +
+      return topbar("#/ristorante") + hero("Menù cena", set("cena_sottotitolo", "Pizze e bevande"), [set("foto_cena"), "img/cena.jpg"]) +
         tabs([["pizze", "Pizze"], ["bevande", "Bevande"]]) + '<div class="wrap menu">' + pizzeSection() + bevandeSection() + "</div>" + footer();
     },
 
     dolci: function () {
       var rows = data.Dolci.filter(visible).filter(function (r) { return r.dolce; });
-      return topbar("#/") + hero("Menù dolci", "Fatti in casa", img(set("foto_home_dolci"), "img/dolci.jpg")) +
+      return topbar("#/") + hero("Menù dolci", "Fatti in casa", [set("foto_home_dolci"), "img/dolci.jpg"]) +
         '<div class="wrap menu">' + (rows.length ?
           '<section class="sec"><ul class="items">' + rows.map(function (r) { return itemHTML(r, "dolce", "descrizione"); }).join("") + "</ul></section>" :
           '<p class="empty">Nessun dolce disponibile in questo momento.</p>') + "</div>" + footer();

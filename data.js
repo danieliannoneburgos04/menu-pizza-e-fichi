@@ -87,24 +87,29 @@ window.MENU_DEFAULT = {
    "Cosa fa": "Link al profilo Instagram — vuoto = nascosto"
   },
   {
+   "Chiave": "logo",
+   "Valore": "",
+   "Cosa fa": "Link Google Drive del logo (PNG con sfondo trasparente). Vuoto = logo attuale"
+  },
+  {
    "Chiave": "foto_home_ristorante",
-   "Valore": "img/ristorante.jpg",
-   "Cosa fa": "Foto del riquadro Menù Ristorante (link Google Drive o indirizzo immagine)"
+   "Valore": "",
+   "Cosa fa": "Foto del riquadro Menù Ristorante: incolla il link Google Drive. Vuoto = foto attuale"
   },
   {
    "Chiave": "foto_home_dolci",
-   "Valore": "img/dolci.jpg",
-   "Cosa fa": "Foto del riquadro Menù Dolci"
+   "Valore": "",
+   "Cosa fa": "Foto del riquadro Menù Dolci e della pagina dolci: link Google Drive. Vuoto = foto attuale"
   },
   {
    "Chiave": "foto_pranzo",
-   "Valore": "img/pranzo.jpg",
-   "Cosa fa": "Foto del riquadro Menù Pranzo"
+   "Valore": "",
+   "Cosa fa": "Foto del riquadro Menù Pranzo: link Google Drive. Vuoto = foto attuale"
   },
   {
    "Chiave": "foto_cena",
-   "Valore": "img/cena.jpg",
-   "Cosa fa": "Foto del riquadro Menù Cena"
+   "Valore": "",
+   "Cosa fa": "Foto del riquadro Menù Cena: link Google Drive. Vuoto = foto attuale"
   }
  ],
  "Pranzo": [
@@ -405,7 +410,7 @@ window.MENU_DEFAULT = {
    "Prezzo": "5",
    "Allergeni": "1, 7",
    "Visibile": "SI",
-   "Foto": "img/dolci.jpg"
+   "Foto": ""
   },
   {
    "Dolce": "Tiramisù",
