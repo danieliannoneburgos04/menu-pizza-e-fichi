@@ -31,7 +31,13 @@
       });
     });
     var s = {};
-    out.Impostazioni.forEach(function (r) { if (r.chiave) s[r.chiave.trim()] = r.valore || ""; });
+    // Impostazioni: usa le colonne Chiave/Valore; se le intestazioni sono state cancellate usa la 1ª e la 2ª colonna
+    (raw.Impostazioni || []).forEach(function (row) {
+      var r = {}; Object.keys(row).forEach(function (k) { r[norm(k)] = String(row[k] == null ? "" : row[k]).trim(); });
+      var vals = Object.keys(row).map(function (k) { return String(row[k] == null ? "" : row[k]).trim(); });
+      var k = r.chiave || vals[0], v = r.chiave ? (r.valore || "") : (vals[1] || "");
+      if (k && norm(k) !== "chiave") s[k] = v;
+    });
     out.settings = s;
     var alg = {};
     out.Allergeni.forEach(function (r) { if (r.numero) alg[String(parseInt(r.numero, 10))] = r.allergene; });
@@ -191,7 +197,8 @@
     if (opts.compact) {
       return '<li class="item compact"><div class="body"><div class="row"><span class="name">' + esc(r[nameKey]) +
         (r[descKey] ? ' <small>' + esc(r[descKey]) + "</small>" : "") + "</span>" +
-        (p ? '<span class="dots"></span><span class="price">' + p + "</span>" : "") + "</div>" + allergens(r.allergeni) + "</div></li>";
+        (p ? '<span class="dots"></span><span class="price">' + p + "</span>" : "") + "</div>" +
+        (r.descrizione ? '<p class="desc">' + esc(r.descrizione) + "</p>" : "") + allergens(r.allergeni) + "</div></li>";
     }
     return '<li class="item">' + photo +
       '<div class="body"><div class="row"><span class="name">' + esc(r[nameKey]) + "</span>" +
@@ -266,7 +273,7 @@
       var t = secs.filter(function (s) { return rows.some(function (r) { return norm(r.sezione) === s[0]; }); }).map(function (s) { return [s[0], s[1]]; });
       t.push(["bevande", "Bevande"], ["pizze", "Pizze"]);
       return topbar("#/ristorante") + hero("Menù pranzo", set("pranzo_periodo"), [set("foto_pranzo"), "img/pranzo.jpg"]) +
-        tabs(t) + '<div class="wrap menu">' + body + offer + bevandeSection() + pizzeSection() + "</div>" + footer();
+        tabs(t) + '<div class="wrap menu">' + offer + body + bevandeSection() + pizzeSection() + "</div>" + footer();
     },
 
     cena: function () {
